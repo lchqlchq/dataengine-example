@@ -23,8 +23,7 @@ public class HdfsExample {
 
     private static Configuration conf = null;
 
-    // private static String PATH_TO_SMALL_SITE_XML =
-    // HdfsMain.class.getClassLoader().getResource("smallfs-site.xml").getPath();
+    private static String HADOOP_USER_NAME = "hadoop";
 
     private FileSystem fSystem; /* HDFS file system */
 
@@ -69,7 +68,8 @@ public class HdfsExample {
         // conf file
         conf.addResource(new Path(PATH_TO_HDFS_SITE_XML));
         conf.addResource(new Path(PATH_TO_CORE_SITE_XML));
-        // conf.addResource(new Path(PATH_TO_SMALL_SITE_XML));
+
+        System.setProperty("HADOOP_USER_NAME", HADOOP_USER_NAME);
     }
 
     /**
