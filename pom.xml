@@ -11,6 +11,7 @@
     <modules>
         <module>spark-example</module>
         <module>hdfs-example</module>
+        <module>hbase-example</module>
     </modules>
 
     <properties>
