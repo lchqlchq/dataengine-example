@@ -27,34 +27,9 @@ public class LoginUtil {
 
     private static final Logger LOG = LoggerFactory.getLogger(LoginUtil.class.getName());
 
-    /**
-     * line operator string
-     */
-    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
-
-    /**
-     * jaas file postfix
-     */
-    private static final String JAAS_POSTFIX = ".jaas.conf";
-
-    /**
-     * IBM jdk login module
-     */
-    private static final String IBM_LOGIN_MODULE = "com.ibm.security.auth.module.Krb5LoginModule required";
-
-    /**
-     * oracle jdk login module
-     */
-    private static final String SUN_LOGIN_MODULE = "com.sun.security.auth.module.Krb5LoginModule required";
-
-    /**
-     * java security login file path
-     */
-    private static final String JAVA_SECURITY_LOGIN_CONF_KEY = "java.security.auth.login.config";
 
     private static final String JAVA_SECURITY_KRB5_CONF_KEY = "java.security.krb5.conf";
 
-    private static final String ZOOKEEPER_SERVER_PRINCIPAL_KEY = "zookeeper.server.principal";
 
     private static final String LOGIN_FAILED_CAUSE_PASSWORD_WRONG =
         "(wrong password) keytab file and user not match, you can kinit -k -t keytab user in client server to"
@@ -73,8 +48,6 @@ public class LoginUtil {
 
     private static final String LOGIN_FAILED_CAUSE_TIME_OUT =
         "(time out) can not connect to kdc server or there is fire wall in the network";
-
-    private static final boolean IS_IBM_JDK = System.getProperty("java.vendor").contains("IBM");
 
     /**
      * login function

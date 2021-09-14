@@ -1,10 +1,15 @@
 
-package com.h3c.hbase.example.kerberos;
+package com.h3c.phoenix.example.kerberos;
 
+import com.h3c.hbase.example.kerberos.TestMain;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.sql.*;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -22,6 +27,10 @@ public class PhoenixSample {
     private static final Logger LOG = LoggerFactory.getLogger(PhoenixSample.class.getName());
     Configuration conf = null;
     java.util.Properties props = new java.util.Properties();
+    // 认证信息，具体使用时修改为对应集群的用户名和keytab即可
+    private static String principal = "hadoop";
+    private static String keytabName = "hadoop.keytab";
+    private static String krb5Name = "krb5.conf";
 
     public PhoenixSample(Configuration conf) {
         this.conf = conf;
@@ -47,7 +56,7 @@ public class PhoenixSample {
      */
     public void testCreateTable() {
         LOG.info("Entering testCreateTable.");
-        String url = "jdbc:phoenix:" + conf.get("hbase.zookeeper.quorum");
+        String url = getUrl();
         // Create table
         String createTableSQL =
             "CREATE TABLE IF NOT EXISTS TEST (id integer not null primary key, name varchar, "
@@ -68,7 +77,7 @@ public class PhoenixSample {
      */
     public void testPut() {
         LOG.info("Entering testPut.");
-        String url = "jdbc:phoenix:" + conf.get("hbase.zookeeper.quorum");
+        String url = getUrl();
         // Insert
         String upsertSQL =
             "UPSERT INTO TEST VALUES(1,'John','100000', TO_DATE('1980-01-01','yyyy-MM-dd'))";
@@ -89,7 +98,7 @@ public class PhoenixSample {
      */
     public void testSelect() {
         LOG.info("Entering testSelect.");
-        String url = "jdbc:phoenix:" + conf.get("hbase.zookeeper.quorum");
+        String url = getUrl();
         // Query
         String querySQL = "SELECT * FROM TEST WHERE id = ?";
         Connection conn = null;
@@ -141,12 +150,16 @@ public class PhoenixSample {
         LOG.info("Exiting testSelect.");
     }
 
+    private String getUrl() {
+        return "jdbc:phoenix:" + conf.get("hbase.zookeeper.quorum") + ":" + conf.get("zookeeper.znode.parent");
+    }
+
     /**
      * Drop Table
      */
     public void testDrop() {
         LOG.info("Entering testDrop.");
-        String url = "jdbc:phoenix:" + conf.get("hbase.zookeeper.quorum");
+        String url = getUrl();
         // Delete table
         String dropTableSQL = "DROP TABLE TEST";
 
@@ -158,6 +171,35 @@ public class PhoenixSample {
             LOG.error("Drop failed.", e);
         }
         LOG.info("Exiting testDrop.");
+    }
+
+    public static void main(String[] args) throws  Exception{
+        Configuration conf = HBaseConfiguration.create();
+        //In Windows environment
+        String userdir = TestMain.class.getClassLoader().getResource("conf").getPath() + File.separator;
+        //In Linux environment
+        //String userdir = System.getProperty("user.dir") + File.separator + "conf" + File.separator;
+        conf.addResource(new Path(userdir + "core-site.xml"), false);
+        conf.addResource(new Path(userdir + "hdfs-site.xml"), false);
+        conf.addResource(new Path(userdir + "hbase-site.xml"), false);
+        PhoenixSample phx = new PhoenixSample(conf);
+
+        String userName = principal;
+        String userKeytabFile = userdir + keytabName;
+        String krb5File = userdir + krb5Name;
+        System.setProperty("java.security.krb5.conf", krb5File);
+        UserGroupInformation.setConfiguration(conf);
+        UserGroupInformation.loginUserFromKeytab(userName, userKeytabFile);
+        phx.test();
+
+        /*UserGroupInformation ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(userName, userKeytabFile);
+        ugi.doAs(new PrivilegedAction<Boolean>() {
+            @Override
+            public Boolean run() {
+                phx.test();
+                return Boolean.TRUE;
+            }
+        });*/
     }
 }
 
