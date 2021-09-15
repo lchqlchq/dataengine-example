@@ -1,7 +1,6 @@
 package com.h3c.phoenix.example.kerberos;
 
 import com.h3c.hbase.example.kerberos.LoginUtil;
-import com.h3c.hbase.example.kerberos.TestMain;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -51,7 +50,7 @@ public class PhoenixClientUtil {
         // Default load from conf directory
         conf = HBaseConfiguration.create();
         //In Windows environment
-        String userdir = TestMain.class.getClassLoader().getResource("conf").getPath() + File.separator;
+        String userdir = PhoenixClientUtil.class.getClassLoader().getResource("conf").getPath() + File.separator;
         //In Linux environment
         //String userdir = System.getProperty("user.dir") + File.separator + "conf" + File.separator;
         conf.addResource(new Path(userdir + "core-site.xml"), false);
@@ -73,7 +72,7 @@ public class PhoenixClientUtil {
         if (User.isHBaseSecurityEnabled(conf)) {
             String userName = principal;
             //In Windows environment
-            String userdir = TestMain.class.getClassLoader().getResource("conf").getPath() + File.separator;
+            String userdir = PhoenixClientUtil.class.getClassLoader().getResource("conf").getPath() + File.separator;
             //In Linux environment
             //String userdir = System.getProperty("user.dir") + File.separator + "conf" + File.separator;
 

@@ -3,12 +3,11 @@ package com.h3c.hbase.example.kerberos;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.filter.Filter;
-import org.apache.hadoop.hbase.filter.FilterList;
+import org.apache.hadoop.hbase.filter.*;
 import org.apache.hadoop.hbase.filter.FilterList.Operator;
-import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.io.compress.Compression;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
+import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.hbase.security.access.AccessControlClient;
 import org.apache.hadoop.hbase.security.access.AccessControlLists;
 import org.apache.hadoop.hbase.security.access.Permission;
@@ -16,6 +15,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -30,6 +30,11 @@ import java.util.*;
 public class HBaseSample {
     private static final Logger LOG = LoggerFactory.getLogger(HBaseSample.class.getName());
 
+    private static Configuration conf = null;
+    // 认证信息，具体使用时修改为对应集群的用户名和keytab即可
+    private static String principal = "hadoop";
+    private static String keytabName = "hadoop.keytab";
+    private static String krb5Name = "krb5.conf";
     private TableName tableName = null;
 
     private Connection conn = null;
@@ -414,6 +419,57 @@ public class HBaseSample {
         LOG.info("Exiting testSingleColumnValueFilter.");
     }
 
+    public void testRowFilter() {
+        LOG.info("Entering testRowFilter.");
+
+        Table table = null;
+
+        // Instantiate a ResultScanner object.
+        ResultScanner rScanner = null;
+
+        try {
+            // Create the Configuration instance.
+            table = conn.getTable(tableName);
+
+            // Instantiate a Get object.
+            Scan scan = new Scan();
+            scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("name"));
+            Filter filter = new RowFilter(CompareFilter.CompareOp.LESS_OR_EQUAL, new
+                    BinaryComparator(Bytes.toBytes("012005000202")));
+            scan.setFilter(filter);
+
+
+            // Submit a scan request.
+            rScanner = table.getScanner(scan);
+
+            // Print query results.
+            for (Result r = rScanner.next(); r != null; r = rScanner.next()) {
+                for (Cell cell : r.rawCells()) {
+                    LOG.info("{}:{},{},{}", Bytes.toString(CellUtil.cloneRow(cell)),
+                            Bytes.toString(CellUtil.cloneFamily(cell)), Bytes.toString(CellUtil.cloneQualifier(cell)),
+                            Bytes.toString(CellUtil.cloneValue(cell)));
+                }
+            }
+            LOG.info("Row filter successfully.");
+        } catch (IOException e) {
+            LOG.error("Single column value filter failed ", e);
+        } finally {
+            if (rScanner != null) {
+                // Close the scanner object.
+                rScanner.close();
+            }
+            if (table != null) {
+                try {
+                    // Close the HTable object.
+                    table.close();
+                } catch (IOException e) {
+                    LOG.error("Close table failed ", e);
+                }
+            }
+        }
+        LOG.info("Exiting testRowFilter.");
+
+    }
     /**
      * testFilterList
      */
@@ -545,63 +601,38 @@ public class HBaseSample {
         LOG.info("Exiting dropTable.");
     }
 
-    /**
-     * grantACL
-     */
-    public void grantACL() {
-        LOG.info("Entering grantACL.");
-
-        String user = "huawei";
-        String permissions = "RW";
-
-        String familyName = "info";
-        String qualifierName = "name";
-
-        Table mt = null;
-        Admin hAdmin = null;
+    public static void main(String[] args) {
         try {
-            // Create ACL Instance
-            mt = conn.getTable(AccessControlLists.ACL_TABLE_NAME);
-
-            Permission perm = new Permission(Bytes.toBytes(permissions));
-
-            hAdmin = conn.getAdmin();
-            TableDescriptor ht = hAdmin.getDescriptor(tableName);
-
-            // Judge whether the table exists
-            if (hAdmin.tableExists(mt.getName())) {
-                // Judge whether ColumnFamily exists
-                if (ht.hasColumnFamily(Bytes.toBytes(familyName))) {
-                    // grant permission
-                    AccessControlClient.grant(conn, tableName, user, Bytes.toBytes(familyName),
-                        (qualifierName == null ? null : Bytes.toBytes(qualifierName)), perm.getActions());
-                } else {
-                    // grant permission
-                    AccessControlClient.grant(conn, tableName, user, null, null, perm.getActions());
-                }
-            }
-            LOG.info("Grant ACL successfully.");
-        } catch (Throwable e) {
-            LOG.error("Grant ACL failed ", e);
-        } finally {
-            if (mt != null) {
-                try {
-                    // Close
-                    mt.close();
-                } catch (IOException e) {
-                    LOG.error("Close table failed ", e);
-                }
-            }
-
-            if (hAdmin != null) {
-                try {
-                    // Close Admin Object
-                    hAdmin.close();
-                } catch (IOException e) {
-                    LOG.error("Close admin failed ", e);
-                }
-            }
+            conf = LoginUtil.init();
+            login();
+        } catch (IOException e) {
+            LOG.error("Failed to login because ", e);
+            return;
         }
-        LOG.info("Exiting grantACL.");
+
+        // test hbase
+        HBaseSample oneSample;
+        try {
+            oneSample = new HBaseSample(conf);
+            oneSample.test();
+        } catch (IOException e) {
+            LOG.error("Failed to test HBase because ", e);
+        }
+        LOG.info("-----------finish HBase -------------------");
+    }
+
+    private static void login() throws IOException {
+        if (User.isHBaseSecurityEnabled(conf)) {
+            String userName = principal;
+            //In Windows environment
+            String userdir = HBaseSample.class.getClassLoader().getResource("conf").getPath() + File.separator;
+            //In Linux environment
+            //String userdir = System.getProperty("user.dir") + File.separator + "conf" + File.separator;
+
+            String userKeytabFile = userdir + keytabName;
+            String krb5File = userdir + krb5Name;
+
+            LoginUtil.login(userName, userKeytabFile, krb5File, conf);
+        }
     }
 }

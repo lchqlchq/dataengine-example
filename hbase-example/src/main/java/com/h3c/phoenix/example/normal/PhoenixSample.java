@@ -1,7 +1,6 @@
 
 package com.h3c.phoenix.example.normal;
 
-import com.h3c.hbase.example.kerberos.TestMain;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -182,7 +181,7 @@ public class PhoenixSample {
     public static void main(String[] args) throws  Exception{
         Configuration conf = HBaseConfiguration.create();
         //In Windows environment
-        String userdir = TestMain.class.getClassLoader().getResource("conf").getPath() + File.separator;
+        String userdir = PhoenixSample.class.getClassLoader().getResource("conf").getPath() + File.separator;
         //In Linux environment
         //String userdir = System.getProperty("user.dir") + File.separator + "conf" + File.separator;
         conf.addResource(new Path(userdir + "core-site.xml"), false);

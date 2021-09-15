@@ -1,13 +1,10 @@
 package com.h3c.phoenix.example.normal;
 
-import com.h3c.hbase.example.kerberos.LoginUtil;
-import com.h3c.hbase.example.kerberos.TestMain;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.security.User;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +42,7 @@ public class PhoenixClientUtil {
         // Default load from conf directory
         conf = HBaseConfiguration.create();
         //In Windows environment
-        String userdir = TestMain.class.getClassLoader().getResource("conf").getPath() + File.separator;
+        String userdir = PhoenixClientUtil.class.getClassLoader().getResource("conf").getPath() + File.separator;
         //In Linux environment
         //String userdir = System.getProperty("user.dir") + File.separator + "conf" + File.separator;
         conf.addResource(new Path(userdir + "core-site.xml"), false);

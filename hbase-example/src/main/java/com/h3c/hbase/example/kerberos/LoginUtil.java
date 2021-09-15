@@ -1,6 +1,8 @@
 package com.h3c.hbase.example.kerberos;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.slf4j.Logger;
@@ -148,5 +150,18 @@ public class LoginUtil {
 
             throw e;
         }
+    }
+
+    public static Configuration init() throws IOException {
+        // Default load from conf directory
+        Configuration conf = HBaseConfiguration.create();
+        //In Windows environment
+        String userdir = LoginUtil.class.getClassLoader().getResource("conf").getPath() + File.separator;
+        //In Linux environment
+        //String userdir = System.getProperty("user.dir") + File.separator + "conf" + File.separator;
+        conf.addResource(new Path(userdir + "core-site.xml"), false);
+        conf.addResource(new Path(userdir + "hdfs-site.xml"), false);
+        conf.addResource(new Path(userdir + "hbase-site.xml"), false);
+        return conf;
     }
 }
