@@ -12,6 +12,7 @@
         <module>spark-example</module>
         <module>hdfs-example</module>
         <module>hbase-example</module>
+        <module>hive-example</module>
     </modules>
 
     <properties>
