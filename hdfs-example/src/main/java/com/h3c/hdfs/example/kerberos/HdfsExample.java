@@ -78,11 +78,11 @@ public class HdfsExample {
      * client file
      */
     private static void confLoad() throws IOException {
-        System.setProperty("java.security.krb5.conf", PATH_TO_KRB5_CONF);
         conf = new Configuration();
         // conf fileColocationExample
         conf.addResource(new Path(PATH_TO_HDFS_SITE_XML));
         conf.addResource(new Path(PATH_TO_CORE_SITE_XML));
+        conf.setBoolean("dfs.client.use.datanode.hostname", true);
     }
 
     /**
@@ -94,7 +94,6 @@ public class HdfsExample {
     private static void authentication() throws IOException {
         // security mode
         if ("kerberos".equalsIgnoreCase(conf.get("hadoop.security.authentication"))) {
-            System.setProperty("java.security.krb5.conf", PATH_TO_KRB5_CONF);
             LoginUtil.login(PRNCIPAL_NAME, PATH_TO_KEYTAB, PATH_TO_KRB5_CONF, conf);
         }
     }
