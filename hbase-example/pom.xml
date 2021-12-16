@@ -16,7 +16,7 @@
         <maven.compiler.target>8</maven.compiler.target>
         <hbase.version>2.1.1</hbase.version>
         <hadoop.version>3.0.0-cdh6.2.0</hadoop.version>
-        <phoenix-core.version>5.0.0-cdh6.2.0</phoenix-core.version>
+        <phoenix-core.version>5.0.0-HBase-2.0</phoenix-core.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
